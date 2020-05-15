@@ -1,3 +1,3 @@
-# Color zone
+# Battleship
 
-Extended your territory while avoiding robots.
+A terminal based battleship written in C.

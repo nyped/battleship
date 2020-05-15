@@ -1,17 +1,24 @@
-#include <curses.h>
-#include <locale.h>
+#include <ncurses.h>
+#include "graphic.h"
 
-
-int main () {
-	setlocale(LC_ALL, "");
+int main(int argc, char *argv[])
+{	
 	initscr();
-	clear();
-	move(10,20);
-	addstr("Hello, world");
-	move(LINES-1,0);
+	cbreak();
+	keypad(stdscr, TRUE);
+	start_color();
+	noecho();
 	refresh();
-	getch();
-	endwin();
 
-	return(0);
+	screen screen;
+	screen = init_screen();
+	draw_screen(screen);
+	refresh();
+
+	getch ();
+
+	endwin();			/* End curses mode		  */
+	return 0;
 }
+
+
