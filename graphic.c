@@ -12,6 +12,11 @@
 #define LEFT 0
 #define RIGHT 1
 
+#define HIDDEN 0
+#define SEA 1
+#define TOUCHED 2
+#define SUNKED 3
+
 static void
 draw_grid(panel panel)
 {
@@ -65,12 +70,111 @@ draw_screen(screen screen)
 	draw_status(screen.right);
 }
 
+static void
+colorize_grid(panel panel)
+{
+	int i, j;
+	init_pair(1, COLOR_WHITE, COLOR_BLACK);
+	init_pair(2, COLOR_RED, COLOR_BLACK);
+	init_pair(3, COLOR_BLUE, COLOR_BLACK);
+
+	for (i = 0; i < 10; ++i)
+		for (j = 0; j < 10; ++j) {
+			switch (panel.val_grid[i][j]) {
+			case SEA:
+				wattron(panel.grid, COLOR_PAIR(1));
+				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 2, ACS_BULLET);
+				wattroff(panel.grid, COLOR_PAIR(1));
+				break;
+			case SUNKED:
+				wattron(panel.grid, COLOR_PAIR(2));
+				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 1, ACS_CKBOARD);
+				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 2, ACS_CKBOARD);
+				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 3, ACS_CKBOARD);
+				wattroff(panel.grid, COLOR_PAIR(2));
+				break;
+			case TOUCHED:
+				wattron(panel.grid, COLOR_PAIR(3));
+				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 1, ACS_CKBOARD);
+				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 2, ACS_CKBOARD);
+				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 3, ACS_CKBOARD);
+				wattroff(panel.grid, COLOR_PAIR(3));
+				break;
+			}
+	}
+	wrefresh(panel.grid);
+}
+
+void
+colorize_screen(screen screen)
+{
+	colorize_grid(screen.left);
+	colorize_grid(screen.right);
+}
+
+static void
+move_target(point coord, panel panel)
+{
+	draw_grid(panel);
+	init_pair(1, COLOR_RED, COLOR_BLACK);
+	wattron(panel.grid, COLOR_PAIR(1));
+
+	/* top and bottom lines */
+	for (int i = 0; i < 2; ++i) {
+		mvwaddch(panel.grid, 2 * coord.x + 2 * i, 4 * coord.y + 1, ACS_HLINE);
+		mvwaddch(panel.grid, 2 * coord.x + 2 * i, 4 * coord.y + 2, ACS_HLINE);
+		mvwaddch(panel.grid, 2 * coord.x + 2 * i, 4 * coord.y + 3, ACS_HLINE);
+	}
+	/* left, right lines */
+	mvwaddch(panel.grid, 2 * coord.x + 1, 4 * coord.y, ACS_VLINE);
+	mvwaddch(panel.grid, 2 * coord.x + 1, 4 * coord.y + 4, ACS_VLINE);
+	/* four corners */
+	mvwaddch(panel.grid, 2 * coord.x, 4 * coord.y, ACS_ULCORNER);
+	mvwaddch(panel.grid, 2 * coord.x, 4 * coord.y + 4, ACS_URCORNER);
+	mvwaddch(panel.grid, 2 * coord.x + 2, 4 * coord.y + 4, ACS_LRCORNER);
+	mvwaddch(panel.grid, 2 * coord.x + 2, 4 * coord.y, ACS_LLCORNER);
+
+	wattroff(panel.grid, COLOR_PAIR(1));
+	wrefresh(panel.grid);
+}
+
+point
+choose_target(panel panel)
+{
+	int ch;
+	point coord = {.x = 4, .y = 4};
+	move_target(coord, panel);
+
+	while ((ch = getch()) != 10) {
+		switch (ch) {
+		case KEY_LEFT:
+			if (coord.y > 0)
+				--coord.y;
+			break;
+		case KEY_RIGHT:
+			if (coord.y < 9)
+				++coord.y;
+			break;
+		case KEY_UP:
+			if (coord.x > 0)
+				--coord.x;
+			break;
+		case KEY_DOWN:
+			if (coord.x < 9)
+				++coord.x;
+			break;
+		}
+		move_target(coord, panel);
+	}
+	return (coord);
+}
+
 static panel
 create_panel(int side)
 {
 	int i, j, GRID_Y, GRID_X, STATUS_Y, STATUS_X;
 	panel panel = { .val_status = {4, 1, 1, 1, 2, 1},
-					.val_grid = {[0 ... 9][0 ... 19] = 0} };
+					.val_grid = {[0 ... 9][0 ... 19] = HIDDEN} };
 
 	GRID_Y = (LINES - GRID_H) / 2;
 	STATUS_Y = (LINES - STATUS_H) / 2;
@@ -92,8 +196,11 @@ create_panel(int side)
 screen
 init_screen(void)
 {
-	screen screen;
-	screen.left = create_panel(LEFT);
-	screen.right = create_panel(RIGHT);
+	screen screen = {
+						.left = create_panel(LEFT),
+						.right = create_panel(RIGHT),
+						.player = LEFT,
+						.victory = FALSE
+					};
 	return(screen);
 }

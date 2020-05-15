@@ -6,12 +6,13 @@ typedef struct panel {
 
 typedef struct screen {
 	panel left, right;
+	int player;
+	int victory;
 } screen;
 
-typedef struct info {
-	WINDOW *display;
-	int current_player;
-} info;
+typedef struct point {
+	int x, y;
+} point;
 
 void
 draw_screen(screen screen);
@@ -19,3 +20,8 @@ draw_screen(screen screen);
 screen
 init_screen(void);
 
+void
+colorize_screen(screen screen);
+
+point
+choose_target(panel panel);
