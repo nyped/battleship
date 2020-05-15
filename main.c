@@ -1,5 +1,6 @@
-#include <ncurses.h>
+#include "variables.h"
 #include "graphic.h"
+#include "core.h"
 
 int main(int argc, char *argv[])
 {
@@ -20,7 +21,10 @@ int main(int argc, char *argv[])
 	refresh();
 	draw_screen(screen);
 	colorize_screen(screen);
-	point x = choose_target(screen.left);
+	Point x = choose_target(screen.left);
+	make_move(x, &(screen));
+	colorize_screen(screen);
+	draw_screen(screen);
 	getch ();
 
 	endwin();

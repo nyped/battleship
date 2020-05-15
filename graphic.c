@@ -1,4 +1,4 @@
-#include <ncurses.h>
+#include "variables.h"
 #include "graphic.h"
 
 #define GRID_H 21
@@ -8,14 +8,6 @@
 #define STATUS_W 12
 
 #define WIN_MARGIN ((COLS - 2 * (GRID_W + STATUS_W) ) / 5)
-
-#define LEFT 0
-#define RIGHT 1
-
-#define HIDDEN 0
-#define SEA 1
-#define TOUCHED 2
-#define SUNKED 3
 
 static void
 draw_grid(panel panel)
@@ -77,6 +69,7 @@ colorize_grid(panel panel)
 	init_pair(1, COLOR_WHITE, COLOR_BLACK);
 	init_pair(2, COLOR_RED, COLOR_BLACK);
 	init_pair(3, COLOR_BLUE, COLOR_BLACK);
+	init_pair(4, COLOR_YELLOW, COLOR_BLACK);
 
 	for (i = 0; i < 10; ++i)
 		for (j = 0; j < 10; ++j) {
@@ -100,6 +93,13 @@ colorize_grid(panel panel)
 				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 3, ACS_CKBOARD);
 				wattroff(panel.grid, COLOR_PAIR(3));
 				break;
+			case POPULATING:
+				wattron(panel.grid, COLOR_PAIR(4));
+				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 1, ACS_CKBOARD);
+				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 2, ACS_CKBOARD);
+				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 3, ACS_CKBOARD);
+				wattroff(panel.grid, COLOR_PAIR(4));
+				break;
 			}
 	}
 	wrefresh(panel.grid);
@@ -113,7 +113,7 @@ colorize_screen(screen screen)
 }
 
 static void
-move_target(point coord, panel panel)
+move_target(Point coord, panel panel)
 {
 	draw_grid(panel);
 	init_pair(1, COLOR_RED, COLOR_BLACK);
@@ -138,11 +138,11 @@ move_target(point coord, panel panel)
 	wrefresh(panel.grid);
 }
 
-point
+Point
 choose_target(panel panel)
 {
 	int ch;
-	point coord = {.x = 4, .y = 4};
+	Point coord = {.x = 4, .y = 4};
 	move_target(coord, panel);
 
 	while ((ch = getch()) != 10) {
@@ -174,12 +174,12 @@ create_panel(int side)
 {
 	int i, j, GRID_Y, GRID_X, STATUS_Y, STATUS_X;
 	panel panel = { .val_status = {4, 1, 1, 1, 2, 1},
-					.val_grid = {[0 ... 9][0 ... 19] = HIDDEN} };
+					.val_grid = {[0 ... 9][0 ... 19] = NOTHING_HIDDEN} };
 
 	GRID_Y = (LINES - GRID_H) / 2;
 	STATUS_Y = (LINES - STATUS_H) / 2;
 
-	if (side == LEFT) {
+	if (side == LEFT_PLAYER) {
 		GRID_X = WIN_MARGIN;
 		STATUS_X = 2 * WIN_MARGIN + GRID_W;
 	} else {
@@ -197,10 +197,13 @@ screen
 init_screen(void)
 {
 	screen screen = {
-						.left = create_panel(LEFT),
-						.right = create_panel(RIGHT),
-						.player = LEFT,
+						.left = create_panel(LEFT_PLAYER),
+						.right = create_panel(RIGHT_PLAYER),
+						.player = LEFT_PLAYER,
 						.victory = FALSE
 					};
+	screen.left.val_grid[4][4] = SHIP_HIDDEN;
+	screen.left.val_grid[4][5] = TOUCHED;
+	screen.left.val_grid[4][6] = TOUCHED;
 	return(screen);
 }
