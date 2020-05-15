@@ -15,4 +15,4 @@ test: build
 	./$(EXE_NAME)
 
 clean:
-	rm *.{o} $(EXE_NAME)
+	rm *.o $(EXE_NAME)
