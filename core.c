@@ -107,7 +107,8 @@ check_neighbours(Point point, Panel panel, int trys)
 				if (tile == TOUCHED) {
 					neighbour.x = i;
 					neighbour.y = j;
-					check_neighbours(neighbour, panel, --trys);
+					if (check_neighbours(neighbour, panel, --trys) == FALSE)
+						return(FALSE);
 				}
 			}
 	return(TRUE);
@@ -123,6 +124,8 @@ sink_neighbours(Point point, Panel *panel)
 		for (j = point.y - 1; j <= point.y + 1; ++j)
 			if (i < 10 && j < 10 && i > -1 && j > -1) {
 				tile = panel->val_grid[i][j];
+				if (tile == NOTHING_HIDDEN)
+					panel->val_grid[i][j] = SEA;
 				if (tile == TOUCHED) {
 					panel->val_grid[i][j] = SUNKED;
 					neighbour.x = i;
@@ -207,14 +210,14 @@ make_move_panel(Point point, Panel *panel)
 	return(FALSE);
 }
 
-void
-make_move(Point point, Screen *screen)
+static void
+make_move(Point l_cursor, Point r_cursor, Screen *screen)
 {
 	bool ret;
 	if (current_player(*screen) == LEFT_PLAYER)
-		ret = make_move_panel(point, &(screen->left));
+		ret = make_move_panel(l_cursor, &(screen->left));
 	else
-		ret = make_move_panel(point, &(screen->right));
+		ret = make_move_panel(r_cursor, &(screen->right));
 
 	if (ret) /* have to change player */
 		screen->player = next_player(*screen);
@@ -237,23 +240,23 @@ two_player_loop(void)
 	}
 
 	Screen screen;
-	Point coord_l = {.x = 4, .y = 4};
-	Point coord_r = {.x = 4, .y = 4};
+	Point l_cursor = {.x = 4, .y = 4};
+	Point r_cursor = {.x = 4, .y = 4};
 
 	screen = init_screen();
 	refresh();
 	draw_screen(screen);
 	colorize_screen(screen);
 	populate(&screen);
+	draw_all_status(screen);
 
 	while (! is_finished(screen)) {
-		if (current_player(screen) == LEFT_PLAYER) {
-			coord_l = choose_target(screen.left, coord_l);
-			make_move(coord_l, &screen);
-		} else {
-			coord_r = choose_target(screen.right, coord_r);
-			make_move(coord_r, &screen);
-		}
+		if (current_player(screen) == LEFT_PLAYER)
+			l_cursor = choose_target(screen.left, l_cursor);
+		else
+			r_cursor = choose_target(screen.right, r_cursor);
+		make_move(l_cursor, r_cursor, &screen);
+
 		colorize_screen(screen);
 		draw_all_status(screen);
 	}

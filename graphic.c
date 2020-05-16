@@ -69,7 +69,7 @@ draw_status(Panel panel)
 								};
 
 	box(panel.status, 0, 0);
-	mvwprintw(panel.status,  1, 1, "left (HxL)" );
+	mvwprintw(panel.status,  1, 1, "left (HxW)" );
 	mvwhline(panel.status, 2, 1, ACS_HLINE, STATUS_W - 2);
 
 	for (line = 0; line < 6; ++line)
@@ -97,7 +97,7 @@ draw_screen(Screen screen)
 void
 colorize_grid(Panel panel)
 {
-	int i, j;
+	int i, j, color;
 	init_pair(1, COLOR_WHITE, COLOR_BLACK);
 	init_pair(2, COLOR_RED, COLOR_BLACK);
 	init_pair(3, COLOR_BLUE, COLOR_BLACK);
@@ -111,38 +111,26 @@ colorize_grid(Panel panel)
 				wattron(panel.grid, COLOR_PAIR(1));
 				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 2, ACS_BULLET);
 				wattroff(panel.grid, COLOR_PAIR(1));
-				break;
+				continue;
 			case SUNKED:
-				wattron(panel.grid, COLOR_PAIR(2));
-				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 1, ACS_CKBOARD);
-				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 2, ACS_CKBOARD);
-				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 3, ACS_CKBOARD);
-				wattroff(panel.grid, COLOR_PAIR(2));
+				color = 2;
 				break;
 			case TOUCHED:
-				wattron(panel.grid, COLOR_PAIR(3));
-				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 1, ACS_CKBOARD);
-				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 2, ACS_CKBOARD);
-				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 3, ACS_CKBOARD);
-				wattroff(panel.grid, COLOR_PAIR(3));
+				color = 3;
 				break;
 			case POPULATING:
-				wattron(panel.grid, COLOR_PAIR(4));
-				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 1, ACS_CKBOARD);
-				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 2, ACS_CKBOARD);
-				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 3, ACS_CKBOARD);
-				wattroff(panel.grid, COLOR_PAIR(4));
+				color = 4;
 				break;
 			default:
-				wattron(panel.grid, COLOR_PAIR(5));
+				color = 5;
+				break;
+			}
+				wattron(panel.grid, COLOR_PAIR(color));
 				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 1, ACS_CKBOARD);
 				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 2, ACS_CKBOARD);
 				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 3, ACS_CKBOARD);
-				wattroff(panel.grid, COLOR_PAIR(5));
-				break;
-
-			}
-	}
+				wattroff(panel.grid, COLOR_PAIR(color));
+		}
 	wrefresh(panel.grid);
 }
 

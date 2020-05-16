@@ -4,7 +4,7 @@ A terminal based battleship written in C.
 
 ## state
 
-For the moment, we just have a single mode player.
+For the moment, we just have a 2 players mode.
 
 ## preriquisites
 
@@ -19,3 +19,6 @@ cd path/to/cloned/directory
 
 make test
 ```
+
+Arrow keys, WASD keys to move the cursor.
+Tab, enter to shoot.

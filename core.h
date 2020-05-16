@@ -33,7 +33,4 @@ int
 next_player(Screen screen);
 
 void
-make_move(Point point, Screen *screen);
-
-void
 two_player_loop(void);
