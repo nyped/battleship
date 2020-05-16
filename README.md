@@ -10,7 +10,7 @@ For the moment, we just have a single mode player.
 
 - C
 - ncurses
-- a terminal that support colors
+- a terminal that supports colors
 
 ## wanna try it out?
 
