@@ -3,7 +3,7 @@
 #include "graphic.h"
 
 static bool
-is_finished_player(panel panel)
+is_finished_player(Panel panel)
 {
 	int i, j, tile;
 	for (i = 0; i < 10; ++i)
@@ -16,7 +16,7 @@ is_finished_player(panel panel)
 }
 
 bool
-is_finished(screen screen)
+is_finished(Screen screen)
 {
 	if (is_finished_player(screen.left) || is_finished_player(screen.right))
 		return(TRUE);
@@ -24,13 +24,13 @@ is_finished(screen screen)
 }
 
 int
-current_player(screen screen)
+current_player(Screen screen)
 {
 	return(screen.player);
 }
 
 int
-next_player(screen screen)
+next_player(Screen screen)
 {
 	if (current_player(screen))
 		return(LEFT_PLAYER);
@@ -38,7 +38,7 @@ next_player(screen screen)
 }
 
 static bool
-move_ok(Point point, panel panel)
+move_ok(Point point, Panel panel)
 {
 	int tile = panel.val_grid[point.x][point.y];
 	if ( tile == NOTHING_HIDDEN || tile == SHIP_HIDDEN)
@@ -47,7 +47,7 @@ move_ok(Point point, panel panel)
 }
 
 static bool
-touch(Point point, panel *panel)
+touch(Point point, Panel *panel)
 {
 	int i, j;
 
@@ -59,12 +59,13 @@ touch(Point point, panel *panel)
 	for (i = point.x - 1; i <= point.x + 1; i += 2)
 		for (j = point.y - 1; j <= point.y + 1; j += 2)
 			if (i < 10 && j < 10 && i > -1 && j > -1)
-				panel->val_grid[i][j] = SEA;
+				if (panel->val_grid[i][j] == NOTHING_HIDDEN) /* for safety */
+					panel->val_grid[i][j] = SEA;
 	return(TRUE);
 }
 
 static bool
-check_neighbours(Point point, panel panel, int trys)
+check_neighbours(Point point, Panel panel, int trys)
 {
 	int i, j, tile;
 	Point neighbour;
@@ -87,7 +88,7 @@ check_neighbours(Point point, panel panel, int trys)
 }
 
 static void
-sunk_neighbours(Point point, panel *panel)
+sunk_neighbours(Point point, Panel *panel)
 {
 	int i, j, tile;
 	Point neighbour;
@@ -106,41 +107,39 @@ sunk_neighbours(Point point, panel *panel)
 }
 
 static int
-count_len(Point *point, panel panel, int direction) /* 0, 1 -> Horizontal, vertical */
+count_len(Point point, Panel panel, int direction) /* 0, 1 -> Horizontal, vertical */
 {
+	Point coord = point;
 	int *var;
 	int sum = 1, initial_coord;
 
 	if (direction == 0)
-		var = &(point->y);
+		var = &(coord.y);
 	else
-		var = &(point->x);
+		var = &(coord.x);
 
-	initial_coord = *var;
-	(*var)++;
+	initial_coord = (*var)++;
 
-	while ((panel.val_grid[point->x][point->y] == SUNKED) && (*var < 10) && (*var > -1)) {
+	while ((panel.val_grid[coord.x][coord.y] == SUNKED) && (*var < 10) && (*var > -1)) {
 		++(*var);
 		++sum;
 	}
 
 	*var = --initial_coord;
-	while ((panel.val_grid[point->x][point->y] == SUNKED) && (*var < 10) && (*var > -1)) {
+	while ((panel.val_grid[coord.x][coord.y] == SUNKED) && (*var < 10) && (*var > -1)) {
 		--(*var);
 		++sum;
 	}
-	*var = initial_coord;
-
 	return(sum);
 }
 
 static void
-update_status(Point point, panel *panel)
+update_status(Point point, Panel *panel)
 {
 	int width, heigth, index;
 
-	width = count_len(&point, *(panel), 0);
-	heigth = count_len(&point, *(panel), 1);
+	width = count_len(point, *(panel), 0);
+	heigth = count_len(point, *(panel), 1);
 
 	switch (heigth) {
 	case 1:
@@ -157,7 +156,7 @@ update_status(Point point, panel *panel)
 }
 
 static void
-change_player(screen screen)
+change_player(Screen screen)
 {
 	if (screen.player)
 		screen.player = LEFT_PLAYER;
@@ -165,20 +164,26 @@ change_player(screen screen)
 		screen.player = RIGHT_PLAYER;
 }
 
-static void
-make_move_panel(Point point, panel *panel)
+static bool
+make_move_panel(Point point, Panel *panel)
 {
 	if (move_ok(point, *panel) && touch(point, panel) && check_neighbours(point, *panel, 5)) {
 			sunk_neighbours(point, panel);
 			update_status(point, panel);
+			return(TRUE);
 	}
+	return(FALSE);
 }
 
 void
-make_move(Point point, screen *screen)
+make_move(Point point, Screen *screen)
 {
+	bool ret;
 	if (current_player(*screen) == LEFT_PLAYER)
-		make_move_panel(point, &(screen->left));
+		ret = make_move_panel(point, &(screen->left));
 	else
-		make_move_panel(point, &(screen->right));
+		ret = make_move_panel(point, &(screen->right));
+
+	if (!ret)
+		screen->player = next_player(*screen);
 }

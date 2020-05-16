@@ -1,16 +1,16 @@
 #include <ncurses.h>
 
-typedef struct panel {
+typedef struct Panel {
 	WINDOW *grid, *status;
-	int val_grid[10][20];
+	int val_grid[10][10];
 	int val_status[6];
-} panel;
+} Panel;
 
-typedef struct screen {
-	panel left, right;
+typedef struct Screen {
+	Panel left, right;
 	int player;
 	int victory;
-} screen;
+} Screen;
 
 typedef struct Point {
 	int x, y;

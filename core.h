@@ -1,11 +1,12 @@
 bool
-is_finished(screen screen);
+is_finished(Screen screen);
 
 int
-current_player(screen screen);
+current_player(Screen screen);
 
 int
-next_player(screen screen);
+next_player(Screen screen);
 
 void
-make_move(Point point, screen *screen);
+make_move(Point point, Screen *screen);
+
