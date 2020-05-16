@@ -1,0 +1,2 @@
+void
+populate(Screen *screen);
