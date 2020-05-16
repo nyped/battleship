@@ -1,6 +1,32 @@
+/*
+MIT License
+
+Copyright (c) 2020 PEDERSEN Ny Aina
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+
 #include "variables.h"
 #include "core.h"
 #include "graphic.h"
+#include "populate.h"
 
 static bool
 is_finished_player(Panel panel)
@@ -9,7 +35,7 @@ is_finished_player(Panel panel)
 	for (i = 0; i < 10; ++i)
 		for (j = 0; j < 10; ++j) {
 			tile = panel.val_grid[i][j];
-			if (tile == SHIP_HIDDEN || tile == NOTHING_HIDDEN)
+			if (tile == SHIP_HIDDEN)
 				return(FALSE);
 		}
 	return(TRUE);
@@ -41,7 +67,7 @@ static bool
 move_ok(Point point, Panel panel)
 {
 	int tile = panel.val_grid[point.x][point.y];
-	if ( tile == NOTHING_HIDDEN || tile == SHIP_HIDDEN)
+	if (tile == NOTHING_HIDDEN || tile == SHIP_HIDDEN)
 		return(TRUE);
 	return(FALSE);
 }
@@ -88,7 +114,7 @@ check_neighbours(Point point, Panel panel, int trys)
 }
 
 static void
-sunk_neighbours(Point point, Panel *panel)
+sink_neighbours(Point point, Panel *panel)
 {
 	int i, j, tile;
 	Point neighbour;
@@ -101,7 +127,7 @@ sunk_neighbours(Point point, Panel *panel)
 					panel->val_grid[i][j] = SUNKED;
 					neighbour.x = i;
 					neighbour.y = j;
-					sunk_neighbours(neighbour, panel);
+					sink_neighbours(neighbour, panel);
 				}
 			}
 }
@@ -156,20 +182,26 @@ update_status(Point point, Panel *panel)
 }
 
 static void
-change_player(Screen screen)
+change_player(Screen *screen)
 {
-	if (screen.player)
-		screen.player = LEFT_PLAYER;
+	if (screen->player == RIGHT_PLAYER)
+		screen->player = LEFT_PLAYER;
 	else
-		screen.player = RIGHT_PLAYER;
+		screen->player = RIGHT_PLAYER;
 }
 
 static bool
 make_move_panel(Point point, Panel *panel)
 {
-	if (move_ok(point, *panel) && touch(point, panel) && check_neighbours(point, *panel, 5)) {
-			sunk_neighbours(point, panel);
-			update_status(point, panel);
+	if (move_ok(point, *panel)) {
+		if (touch(point, panel)) {
+			if (check_neighbours(point, *panel, 5)) {
+				sink_neighbours(point, panel);
+				update_status(point, panel);
+			}
+		return(FALSE);
+		}
+		else
 			return(TRUE);
 	}
 	return(FALSE);
@@ -184,6 +216,46 @@ make_move(Point point, Screen *screen)
 	else
 		ret = make_move_panel(point, &(screen->right));
 
-	if (!ret)
+	if (ret) /* have to change player */
 		screen->player = next_player(*screen);
+}
+
+void
+two_player_loop(void)
+{
+	/* ncurses set up */
+	initscr();
+	cbreak();
+	keypad(stdscr, TRUE);
+	start_color();
+	noecho();
+	curs_set(0);
+
+	/* if u have a bootled terminal lol */
+	if (has_colors() == FALSE) {
+		endwin();
+	}
+
+	Screen screen;
+	Point coord_l = {.x = 4, .y = 4};
+	Point coord_r = {.x = 4, .y = 4};
+
+	screen = init_screen();
+	refresh();
+	draw_screen(screen);
+	colorize_screen(screen);
+	populate(&screen);
+
+	while (! is_finished(screen)) {
+		if (current_player(screen) == LEFT_PLAYER) {
+			coord_l = choose_target(screen.left, coord_l);
+			make_move(coord_l, &screen);
+		} else {
+			coord_r = choose_target(screen.right, coord_r);
+			make_move(coord_r, &screen);
+		}
+		colorize_screen(screen);
+		draw_all_status(screen);
+	}
+	endwin();
 }

@@ -1,3 +1,28 @@
+/*
+MIT License
+
+Copyright (c) 2020 PEDERSEN Ny Aina
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+
 #include "variables.h"
 #include "graphic.h"
 
@@ -51,6 +76,13 @@ draw_status(Panel panel)
 		mvwprintw(panel.status, line + 3, 1, "  %s: %d", message[line], panel.val_status[line] );
 
 	wrefresh(panel.status);
+}
+
+void
+draw_all_status(Screen screen)
+{
+	draw_status(screen.left);
+	draw_status(screen.right);
 }
 
 void
@@ -148,27 +180,27 @@ move_target(Point coord, Panel panel)
 }
 
 Point
-choose_target(Panel panel)
+choose_target(Panel panel, Point previous)
 {
 	int ch;
-	Point coord = {.x = 4, .y = 4};
+	Point coord = previous;
 	move_target(coord, panel);
 
-	while ((ch = getch()) != 10) {
+	while ((ch = getch()) != 10 && ch != 9) {
 		switch (ch) {
-		case KEY_LEFT:
+		case KEY_LEFT: case 'a':
 			if (coord.y > 0)
 				--coord.y;
 			break;
-		case KEY_RIGHT:
+		case KEY_RIGHT: case 'd':
 			if (coord.y < 9)
 				++coord.y;
 			break;
-		case KEY_UP:
+		case KEY_UP: case 'w':
 			if (coord.x > 0)
 				--coord.x;
 			break;
-		case KEY_DOWN:
+		case KEY_DOWN: case 's':
 			if (coord.x < 9)
 				++coord.x;
 			break;

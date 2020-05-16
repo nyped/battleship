@@ -1,9 +1,34 @@
+/*
+MIT License
+
+Copyright (c) 2020 PEDERSEN Ny Aina
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+
 #include "variables.h"
 #include "core.h"
 #include "graphic.h"
 
 static int
-number_neighbours_ok(Point point, Panel panel)
+number_neighbours(Point point, Panel panel)
 {
 	int i, j, number = 0;
 	for (i = -1; i <= 1; ++i)
@@ -48,22 +73,22 @@ ship_position_ok(Point point, Panel panel, int direction, int index) /* 0, 1 -> 
 	initial_coord = (*var);
 
 	while ((panel.val_grid[coord.x][coord.y] == POPULATING) && (*var < 10) && (*var > -1)) {
-		if (number_neighbours_ok(coord, panel) > 3)
+		if (number_neighbours(coord, panel) > 3)
 			return(FALSE);
 		++(*var);
 	}
 	--(*var);
-	if (number_neighbours_ok(coord, panel) > min(2, index_to_len(index)))
+	if (number_neighbours(coord, panel) > min(2, index_to_len(index)))
 		return(FALSE);
 
 	*var = initial_coord;
 	while ((panel.val_grid[coord.x][coord.y] == POPULATING) && (*var < 10) && (*var > -1)) {
-		if (number_neighbours_ok(coord, panel) > 3)
+		if (number_neighbours(coord, panel) > 3)
 			return(FALSE);
 		--(*var);
 	}
 	++(*var);
-	if (number_neighbours_ok(coord, panel) > min(2, index_to_len(index)))
+	if (number_neighbours(coord, panel) > min(2, index_to_len(index)))
 		return(FALSE);
 
 	return(TRUE);
@@ -144,11 +169,13 @@ populate_panel(Panel *panel)
 {
 	int index;
 	Panel new_panel = *(panel);
-	Point coord;
+	Point coord = {.x = 4, .y = 4};
 
 	for (index = 0; index < 6; ++index) {
 		while (new_panel.val_status[index] > 0) {
-			coord = choose_target(new_panel);
+			coord = choose_target(new_panel, coord);
+			if (new_panel.val_grid[coord.x][coord.y] == POPULATING)
+				continue;
 			add_ship(&coord, &new_panel, index);
 			if (populate_ok(coord, new_panel, index)) {
 				--(new_panel.val_status[index]);

@@ -1,3 +1,28 @@
+/*
+MIT License
+
+Copyright (c) 2020 PEDERSEN Ny Aina
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+
 #include "variables.h"
 #include "graphic.h"
 #include "core.h"
@@ -5,37 +30,7 @@
 
 int main(int argc, char *argv[])
 {
-	initscr();
-	cbreak();
-	keypad(stdscr, TRUE);
-	start_color();
-	noecho();
-	curs_set(0);
+	two_player_loop();
 
-	if (has_colors() == FALSE) {
-		endwin();
-		return(1);
-	}
-
-	Screen screen;
-	screen = init_screen();
-	refresh();
-	draw_screen(screen);
-	colorize_screen(screen);
-
-   /* Point x = choose_target(screen.left);*/
-	/*make_move(x, &(screen));*/
-	/*colorize_screen(screen);*/
-	/*draw_screen(screen);*/
-
-	Point x = {.x = 3, .y = 3};
-	populate(&screen);
-
-	getch ();
-
-	endwin();
-	/*printf("Les coordonnées étaient: %d %d\n", x.x, x.y);*/
 	return 0;
 }
-
-
