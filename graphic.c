@@ -24,7 +24,6 @@ SOFTWARE.
 
 
 #include "variables.h"
-#include "graphic.h"
 
 #define GRID_H 21
 #define GRID_W 41
@@ -103,6 +102,7 @@ colorize_grid(Panel panel)
 	init_pair(3, COLOR_BLUE, COLOR_BLACK);
 	init_pair(4, COLOR_YELLOW, COLOR_BLACK);
 	init_pair(5, COLOR_BLACK, COLOR_BLACK);
+	init_pair(6, COLOR_CYAN, COLOR_BLACK);
 
 	for (i = 0; i < 10; ++i)
 		for (j = 0; j < 10; ++j) {
@@ -120,6 +120,9 @@ colorize_grid(Panel panel)
 				break;
 			case POPULATING:
 				color = 4;
+				break;
+			case REVEAL:
+				color = 6;
 				break;
 			default:
 				color = 5;
@@ -144,12 +147,13 @@ colorize_screen(Screen screen)
 static void
 move_target(Point coord, Panel panel)
 {
+	int i;
 	draw_grid(panel);
 	init_pair(1, COLOR_RED, COLOR_BLACK);
 	wattron(panel.grid, COLOR_PAIR(1));
 
 	/* top and bottom lines */
-	for (int i = 0; i < 2; ++i) {
+	for (i = 0; i < 2; ++i) {
 		mvwaddch(panel.grid, 2 * coord.x + 2 * i, 4 * coord.y + 1, ACS_HLINE);
 		mvwaddch(panel.grid, 2 * coord.x + 2 * i, 4 * coord.y + 2, ACS_HLINE);
 		mvwaddch(panel.grid, 2 * coord.x + 2 * i, 4 * coord.y + 3, ACS_HLINE);
@@ -167,41 +171,39 @@ move_target(Point coord, Panel panel)
 	wrefresh(panel.grid);
 }
 
-Point
-choose_target(Panel panel, Point previous)
+void
+choose_target(Panel panel, Point *point)
 {
 	int ch;
-	Point coord = previous;
-	move_target(coord, panel);
+	move_target(*point, panel);
 
 	while ((ch = getch()) != 10 && ch != 9) {
 		switch (ch) {
 		case KEY_LEFT: case 'a':
-			if (coord.y > 0)
-				--coord.y;
+			if (point->y > 0)
+				--(point->y);
 			break;
 		case KEY_RIGHT: case 'd':
-			if (coord.y < 9)
-				++coord.y;
+			if (point->y < 9)
+				++(point->y);
 			break;
 		case KEY_UP: case 'w':
-			if (coord.x > 0)
-				--coord.x;
+			if (point->x > 0)
+				--(point->x);
 			break;
 		case KEY_DOWN: case 's':
-			if (coord.x < 9)
-				++coord.x;
+			if (point->x < 9)
+				++(point->x);
 			break;
 		}
-		move_target(coord, panel);
+		move_target(*point, panel);
 	}
-	return (coord);
 }
 
 static Panel
 create_panel(int side)
 {
-	int i, j, GRID_Y, GRID_X, STATUS_Y, STATUS_X;
+	int GRID_Y, GRID_X, STATUS_Y, STATUS_X;
 	Panel panel = { .val_status = {4, 1, 1, 1, 2, 1},
 					.val_grid = {[0 ... 9][0 ... 9] = NOTHING_HIDDEN} };
 
@@ -222,14 +224,63 @@ create_panel(int side)
 	return(panel);
 }
 
-Screen
-init_screen(void)
+void
+init_screen(Screen *screen)
 {
-	Screen screen = {
-						.left = create_panel(LEFT_PLAYER),
-						.right = create_panel(RIGHT_PLAYER),
-						.player = LEFT_PLAYER,
-						.victory = FALSE
-					};
-	return(screen);
+	screen->left = create_panel(LEFT_PLAYER),
+	screen->right = create_panel(RIGHT_PLAYER),
+	screen->player = LEFT_PLAYER;
+}
+
+/* greetings */
+
+bool
+welcome(void)
+{
+	WINDOW *dialog;
+	int ch;
+
+	dialog = newwin(30, 95, (LINES - 30) / 2, (COLS - 95) / 2);
+	init_pair(1, COLOR_GREEN, COLOR_BLACK);
+	wattron(dialog, COLOR_PAIR(1));
+	wprintw(dialog,
+	"                                     `.                                                 \n"
+	"                                     .-                                                 \n"
+	"                                     --                                                 \n"
+	"                                    `os`                                                \n"
+	"                                  `-:dm--.                                              \n"
+	"                                 ::-NWWNh.                                              \n"
+	"                          .::///+NWhWMWWNys+                                            \n"
+	"                          `...--hWWWWMWWWWWW:                                           \n"
+	"                               `NWWWMWWWMWWWh                                           \n"
+	"                .///:::----.`` /WWWWWWWWWWWWW:                                          \n"
+	"                `dWWWWWNy/hy///mWWWWWMMWWMWWW/.```                                      \n"
+	"                .WWWWWWWN-ho  -mWWWWWMWWWMMWWmmmmdddo                                   \n"
+	"              ``sWWWWWWWWhmy /omWWMWWWWWWWWWWWWWWWWWo                                   \n"
+	"           `  -+NWWWWWWWMWWmoWWWMWWWWWWMWWWMWWWWWWWWN/      ....`                       \n"
+	"         `+h:-/oNWWWWMMWMWWWWWWWWWWWWWWWWWWMWMWWWWWWWNysssssmNNNdo////.                 \n"
+	"      ./+yWWNmWWWMWMWWWWWWWWWWWWWWMWWWWWWWWWWWWWMWWWMWWWWWWWWWWWWN-                     \n"
+	"      :WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWMWWWWWWWWWWWWWWWWWWWWWWWWWWmy++oooooooooosssssso`\n"
+	"      +WWWWWWWMWWWWWWWWWWWWWWWWWWWWWWWWWWWWWMWWWMWWWWMMWWWMWWWWWWWWWWWWWWWWWWWWWWWWWNy. \n"
+	"./////dWWWWMWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWMWWWWWWWWWWWWWWWWWWWWWWd:   \n"
+	".NWWWWWWMWWWWWWWWWMWWWWWWWWWWWWWMWWWWWWWWWWWWWWWWWWWWWWMWWWWMWMWMWWWWWWWWWWWWWWWWm+`    \n"
+	" /yhdmMNNNNNNNNWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWMWWWWWWWWWWWWWWWNs`      \n"
+	"        ~`..--:://++oosyyhhddmNNNNNNNNWWWMWWWWWWWMWMWWWWWWWWWWWWWWMWMWMWWWWWWWd-        \n"
+	"                                ~`..--:://++ossyyhddmmmNNNNNNNNNNWWWWWWWWWWWWs`         \n"
+	"                                                         ~```...---:::///+++/           \n");
+	wrefresh(dialog);
+	mvwprintw(stdscr, LINES - 2, (COLS - 36)/ 2, "Hit q to exit, an other key to play");
+	wattroff(dialog, COLOR_PAIR(1));
+
+	ch = getch();
+	werase(dialog);
+	werase(stdscr);
+	refresh();
+
+	if (ch == 'q') {
+		delwin(dialog);
+		return(FALSE);
+	}
+	delwin(dialog);
+	return(TRUE);
 }

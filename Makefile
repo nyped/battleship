@@ -1,21 +1,21 @@
 CC= gcc
 EXE_NAME= a.out
-FLAGS= -Wall -g -Wno-unused
+CFLAGS= -Wall -g
 
 build: main.o graphic.o core.o populate.o
-	$(CC) $(FLAGS) main.o graphic.o core.o populate.o -lncurses -o $(EXE_NAME)
+	$(CC) $(CFLAGS) main.o graphic.o core.o populate.o -lncurses -o $(EXE_NAME)
 
 main.o: main.c graphic.c
-	$(CC) $(FLAGS) -c main.c
+	$(CC) $(CFLAGS) -c main.c
 
 graphic.o: graphic.h graphic.c
-	$(CC) $(FLAGS) -c graphic.c
+	$(CC) $(CFLAGS) -c graphic.c
 
 core.o: core.c core.h
-	$(CC) $(FLAGS) -c core.c
+	$(CC) $(CFLAGS) -c core.c
 
 populate.o: populate.c populate.h
-	$(CC) $(FLAGS) -c populate.c
+	$(CC) $(CFLAGS) -c populate.c
 
 test: build
 	./$(EXE_NAME)

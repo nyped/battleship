@@ -2,6 +2,7 @@ TODO:
 
 - [ ] create 1 player mode -> IA
 - [x] keep the target cursor in the same place
-- [ ] greeting, helps, end message...
-- [ ] replay
-
+- [x] greeting, end message...
+- [x] replay
+- [ ] custom keys, custom number of ships
+- [ ] help

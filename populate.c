@@ -24,7 +24,6 @@ SOFTWARE.
 
 
 #include "variables.h"
-#include "core.h"
 #include "graphic.h"
 
 static int
@@ -171,9 +170,11 @@ populate_panel(Panel *panel)
 	Panel new_panel = *(panel);
 	Point coord = {.x = 4, .y = 4};
 
+	mvwprintw(stdscr, LINES - 2, (COLS - 16)/ 2, "Place your ships");
+
 	for (index = 0; index < 6; ++index) {
 		while (new_panel.val_status[index] > 0) {
-			coord = choose_target(new_panel, coord);
+			choose_target(new_panel, &coord);
 			if (new_panel.val_grid[coord.x][coord.y] == POPULATING)
 				continue;
 			add_ship(&coord, &new_panel, index);
@@ -182,16 +183,17 @@ populate_panel(Panel *panel)
 				*panel = new_panel;
 				colorize_grid(*panel);
 				draw_status(*panel);
-				continue;
-			}
+			} else {
 			new_panel = *panel;
 			colorize_grid(*panel);
+			}
 		}
 	}
 	population_to_real_grid(&new_panel);
 	*panel = new_panel;
 	colorize_grid(*panel);
 	draw_grid(*panel);
+	mvwprintw(stdscr, LINES - 2, (COLS - 16)/ 2, "                ");
 }
 
 void

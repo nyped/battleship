@@ -24,7 +24,6 @@ SOFTWARE.
 
 
 #include "variables.h"
-#include "core.h"
 #include "graphic.h"
 #include "populate.h"
 
@@ -72,7 +71,7 @@ move_ok(Point point, Panel panel)
 	return(FALSE);
 }
 
-static bool
+static bool  /* makes the move: if it is a ship, touches the edges */
 touch(Point point, Panel *panel)
 {
 	int i, j;
@@ -85,12 +84,11 @@ touch(Point point, Panel *panel)
 	for (i = point.x - 1; i <= point.x + 1; i += 2)
 		for (j = point.y - 1; j <= point.y + 1; j += 2)
 			if (i < 10 && j < 10 && i > -1 && j > -1)
-				if (panel->val_grid[i][j] == NOTHING_HIDDEN) /* for safety */
 					panel->val_grid[i][j] = SEA;
 	return(TRUE);
 }
 
-static bool
+static bool /* checks recursively if all the cases are touched */
 check_neighbours(Point point, Panel panel, int trys)
 {
 	int i, j, tile;
@@ -214,51 +212,88 @@ static void
 make_move(Point l_cursor, Point r_cursor, Screen *screen)
 {
 	bool ret;
+
 	if (current_player(*screen) == LEFT_PLAYER)
 		ret = make_move_panel(l_cursor, &(screen->left));
 	else
 		ret = make_move_panel(r_cursor, &(screen->right));
 
 	if (ret) /* have to change player */
-		screen->player = next_player(*screen);
+		change_player(screen);
+
+	colorize_screen(*screen);
+	draw_all_status(*screen);
+}
+
+static void
+reveal_panel(Panel *panel)
+{
+	int i, j;
+	for (i = 0; i < 10; ++i)
+		for (j = 0; j < 10; ++j)
+			if (panel->val_grid[i][j] == SHIP_HIDDEN)
+				panel->val_grid[i][j] = REVEAL;
+}
+
+static void
+reveal(Screen *screen)
+{
+	reveal_panel(&(screen->left));
+	reveal_panel(&(screen->right));
+	colorize_screen(*screen);
 }
 
 void
-two_player_loop(void)
+set_curses(void)
 {
-	/* ncurses set up */
 	initscr();
 	cbreak();
 	keypad(stdscr, TRUE);
 	start_color();
 	noecho();
 	curs_set(0);
+	refresh();
+}
 
-	/* if u have a bootled terminal lol */
-	if (has_colors() == FALSE) {
+void
+two_player_loop(void)
+{
+	if (!has_colors()) {
 		endwin();
+		return;
 	}
 
+	if (!welcome()) {
+		endwin();
+		return;
+	}
+
+	int ch;
 	Screen screen;
 	Point l_cursor = {.x = 4, .y = 4};
 	Point r_cursor = {.x = 4, .y = 4};
 
-	screen = init_screen();
-	refresh();
+	init_screen(&screen);
 	draw_screen(screen);
 	colorize_screen(screen);
 	populate(&screen);
 	draw_all_status(screen);
+	mvwprintw(stdscr, LINES - 2, (COLS - 20)/ 2, "Touch the enemy's ships");
 
 	while (! is_finished(screen)) {
 		if (current_player(screen) == LEFT_PLAYER)
-			l_cursor = choose_target(screen.left, l_cursor);
+			choose_target(screen.left, &l_cursor);
 		else
-			r_cursor = choose_target(screen.right, r_cursor);
+			choose_target(screen.right, &r_cursor);
 		make_move(l_cursor, r_cursor, &screen);
-
-		colorize_screen(screen);
-		draw_all_status(screen);
 	}
-	endwin();
+
+	reveal(&screen);
+	mvwprintw(stdscr, LINES - 2, (COLS - 20)/ 2, "                         ");
+	mvwprintw(stdscr, LINES - 2, (COLS - 35)/ 2, "What a game ! Hit space to continue");
+	while ((ch = getch()) != ' ')
+		continue;
+	werase(stdscr);
+	refresh();
+	two_player_loop();
 }

@@ -34,7 +34,6 @@ typedef struct Panel {
 typedef struct Screen {
 	Panel left, right;
 	int player;
-	int victory;
 } Screen;
 
 typedef struct Point {
@@ -47,6 +46,7 @@ typedef struct Point {
 #define TOUCHED 3
 #define SUNKED 4
 #define POPULATING 5
+#define REVEAL 6
 
 #define LEFT_PLAYER 0
 #define RIGHT_PLAYER 1

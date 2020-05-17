@@ -28,8 +28,10 @@ SOFTWARE.
 #include "core.h"
 #include "populate.h"
 
-int main(int argc, char *argv[])
+int main(void)
 {
+	set_curses();
+
 	two_player_loop();
 
 	return 0;

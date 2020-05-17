@@ -34,3 +34,6 @@ next_player(Screen screen);
 
 void
 two_player_loop(void);
+
+void
+set_curses(void);

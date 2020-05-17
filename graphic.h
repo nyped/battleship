@@ -35,8 +35,8 @@ draw_status(Panel panel);
 void
 draw_all_status(Screen screen);
 
-Screen
-init_screen(void);
+void
+init_screen(Screen *screen);
 
 void
 colorize_screen(Screen screen);
@@ -44,5 +44,8 @@ colorize_screen(Screen screen);
 void
 colorize_grid(Panel panel);
 
-Point
-choose_target(Panel panel, Point previous);
+void
+choose_target(Panel panel, Point *point);
+
+bool
+welcome(void);
