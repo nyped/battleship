@@ -18,6 +18,8 @@ For the moment, we just have a 2 players mode.
 cd path/to/cloned/directory
 
 make test
+
+# please play in full screen mode
 ```
 
 Arrow keys, WASD keys to move the cursor.
