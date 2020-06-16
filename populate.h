@@ -4,7 +4,7 @@ number_neighbours(Point point, Panel panel, int tile);
 void
 populate_panel(Panel *panel);
 
-void
+bool
 add_ship(Point *point, Panel *panel, int type);
 
 bool

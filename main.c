@@ -5,9 +5,7 @@
 
 int main(void)
 {
-	set_curses();
-
-	one_player_loop();
+	main_loop();
 
 	return 0;
 }

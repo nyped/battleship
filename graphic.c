@@ -209,53 +209,80 @@ init_screen(Screen *screen)
 
 /* greetings */
 
-bool
-welcome(void)
+#define N_CHOICES 3
+
+static char
+*choices[] = {
+	"One player mode",
+	"Two player mode",
+	"Exit",
+};
+
+static void
+print_menu(WINDOW *menu_win, int highlight)
 {
-	WINDOW *dialog;
-	int ch;
+	int x, y, i;
 
-	dialog = newwin(30, 95, (LINES - 30) / 2, (COLS - 95) / 2);
-	init_pair(1, COLOR_GREEN, COLOR_BLACK);
-	wattron(dialog, COLOR_PAIR(1));
-	wprintw(dialog,
-	"                                     `.                                                 \n"
-	"                                     .-                                                 \n"
-	"                                     --                                                 \n"
-	"                                    `os`                                                \n"
-	"                                  `-:dm--.                                              \n"
-	"                                 ::-NWWNh.                                              \n"
-	"                          .::///+NWhWMWWNys+                                            \n"
-	"                          `...--hWWWWMWWWWWW:                                           \n"
-	"                               `NWWWMWWWMWWWh                                           \n"
-	"                .///:::----.`` /WWWWWWWWWWWWW:                                          \n"
-	"                `dWWWWWNy/hy///mWWWWWMMWWMWWW/.```                                      \n"
-	"                .WWWWWWWN-ho  -mWWWWWMWWWMMWWmmmmdddo                                   \n"
-	"              ``sWWWWWWWWhmy /omWWMWWWWWWWWWWWWWWWWWo                                   \n"
-	"           `  -+NWWWWWWWMWWmoWWWMWWWWWWMWWWMWWWWWWWWN/      ....`                       \n"
-	"         `+h:-/oNWWWWMMWMWWWWWWWWWWWWWWWWWWMWMWWWWWWWNysssssmNNNdo////.                 \n"
-	"      ./+yWWNmWWWMWMWWWWWWWWWWWWWWMWWWWWWWWWWWWWMWWWMWWWWWWWWWWWWN-                     \n"
-	"      :WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWMWWWWWWWWWWWWWWWWWWWWWWWWWWmy++oooooooooosssssso`\n"
-	"      +WWWWWWWMWWWWWWWWWWWWWWWWWWWWWWWWWWWWWMWWWMWWWWMMWWWMWWWWWWWWWWWWWWWWWWWWWWWWWNy. \n"
-	"./////dWWWWMWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWMWWWWWWWWWWWWWWWWWWWWWWd:   \n"
-	".NWWWWWWMWWWWWWWWWMWWWWWWWWWWWWWMWWWWWWWWWWWWWWWWWWWWWWMWWWWMWMWMWWWWWWWWWWWWWWWWm+`    \n"
-	" /yhdmMNNNNNNNNWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWMWWWWWWWWWWWWWWWNs`      \n"
-	"        ~`..--:://++oosyyhhddmNNNNNNNNWWWMWWWWWWWMWMWWWWWWWWWWWWWWMWMWMWWWWWWWd-        \n"
-	"                                ~`..--:://++ossyyhddmmmNNNNNNNNNNWWWWWWWWWWWWs`         \n"
-	"                                                         ~```...---:::///+++/           \n");
-	wrefresh(dialog);
-	mvwprintw(stdscr, LINES - 2, (COLS - 36)/ 2, "Hit q to exit, an other key to play");
-	wattroff(dialog, COLOR_PAIR(1));
-
-	ch = getch();
-	werase(dialog);
-	werase(stdscr);
-	refresh();
-
-	if (ch == 'q') {
-		delwin(dialog);
-		return(FALSE);
+	x = 1;
+	y = 1;
+	box(menu_win, 0, 0);
+	for(i = 0; i < N_CHOICES; ++i)
+	{	if(highlight == i + 1) /* High light the present choice */
+		{	wattron(menu_win, A_REVERSE);
+			mvwprintw(menu_win, y, x, "%s", choices[i]);
+			wattroff(menu_win, A_REVERSE);
+		}
+		else
+			mvwprintw(menu_win, y, x, "%s", choices[i]);
+		++y;
 	}
-	delwin(dialog);
-	return(TRUE);
+	wrefresh(menu_win);
+}
+
+int
+greetings(void)
+{
+	int dialog_H = 5;
+	int dialog_W = 17;
+	int startx = (COLS - dialog_W) / 2;
+	int starty = (LINES - dialog_H) / 2;
+
+	WINDOW *menu_win;
+	int highlight = 1;
+	int choice = 0;
+	int c;
+
+	menu_win = newwin(dialog_H, dialog_W, starty, startx);
+	keypad(menu_win, TRUE);
+	refresh();
+	print_menu(menu_win, highlight);
+	while(1)
+	{	c = wgetch(menu_win);
+		switch(c)
+		{	case KEY_UP:
+				if(highlight == 1)
+					highlight = N_CHOICES;
+				else
+					--highlight;
+				break;
+			case KEY_DOWN:
+				if(highlight == N_CHOICES)
+					highlight = 1;
+				else
+					++highlight;
+				break;
+			case 10:
+				choice = highlight;
+				break;
+			default:
+				break;
+		}
+		print_menu(menu_win, highlight);
+		if(choice != 0)	/* User did a choice come out of the infinite loop */
+			break;
+	}
+	clrtoeol();
+	refresh();
+	endwin();
+	return(choice);
 }

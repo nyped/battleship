@@ -219,7 +219,7 @@ reveal(Screen *screen)
 	colorize_screen(*screen);
 }
 
-void
+static void
 set_curses(void)
 {
 	initscr();
@@ -231,19 +231,9 @@ set_curses(void)
 	refresh();
 }
 
-void
+static void
 two_player_loop(void)
 {
-	if (!has_colors()) {
-		endwin();
-		return;
-	}
-
-	if (!welcome()) {
-		endwin();
-		return;
-	}
-
 	int ch;
 	Screen screen;
 	Point l_cursor = {.x = 4, .y = 4};
@@ -271,25 +261,30 @@ two_player_loop(void)
 		continue;
 	werase(stdscr);
 	refresh();
-	two_player_loop();
 }
 
 /* bot stuff */
 
 static void
-bot_move(Panel *panel)
+bot_move(Screen *screen, int trys)
 {
-	Point coord = get_coord_touched(*panel);
+	Point coord = get_coord_touched(screen->left);
 
 	if (coord.x == 20) {
 		do {
 			coord = random_point();
-		} while ((panel->val_grid[coord.x][coord.y] > 1) 
-				|| ((number_neighbours(coord, *panel, SUNKED) > 0) && (panel->val_status[1] != 0)));
+		} while (((screen->left).val_grid[coord.x][coord.y] > 1)
+				|| ((number_neighbours(coord, screen->left, SEA) > 5) && ((screen->left).val_status[1] > 0) &&
+					((screen->left).val_status[2] > 0) && ((screen->left).val_status[3] > 0) &&
+					((screen->left).val_status[4] > 0) && ((screen->left).val_status[1] > 0)));
 	} else {
-		guess_next(&coord, panel);
+		guess_next(&coord, &(screen->left), trys);
 	}
-	make_move_panel(coord, panel);
+	if (make_move_panel(coord, &(screen->left)))
+		change_player(screen);
+
+	colorize_screen(*screen);
+	draw_all_status(*screen);
 }
 
 static void
@@ -300,20 +295,10 @@ one_player_populate(Screen *screen)
 	/*populate_panel(&(screen->right));*/
 }
 
-void
+static void
 one_player_loop(void)
 {
-	if (!has_colors()) {
-		endwin();
-		return;
-	}
-
-	if (!welcome()) {
-		endwin();
-		return;
-	}
-
-	int ch;
+	int ch, trys = 0;
 	Screen screen;
 	Point l_cursor = {.x = 4, .y = 4};
 	Point r_cursor = {.x = 4, .y = 4};
@@ -327,12 +312,13 @@ one_player_loop(void)
 
 	while (! is_finished(screen)) {
 		if (current_player(screen) == LEFT_PLAYER) {
-			bot_move(&(screen.left));
-			change_player(&screen);
+			bot_move(&screen, ++trys);
+			continue;
 		} else {
 			choose_target(screen.right, &r_cursor);
 			make_move(l_cursor, r_cursor, &screen);
 		}
+		trys = 0;
 	}
 
 	reveal(&screen);
@@ -342,5 +328,36 @@ one_player_loop(void)
 		continue;
 	werase(stdscr);
 	refresh();
-	one_player_loop();
+}
+
+void
+main_loop(void)
+{
+	set_curses();
+	if (!has_colors()) {
+		endwin();
+		return;
+	}
+	while (TRUE)
+		switch(greetings()) {
+		case 1:
+			werase(stdscr);
+			refresh();
+			one_player_loop();
+			break;
+		case 2:
+			werase(stdscr);
+			refresh();
+			endwin();
+			two_player_loop();
+			break;
+		case 3:
+			endwin();
+			return;
+		default:
+			break;
+		}
+	clrtoeol();
+	refresh();
+	endwin();
 }

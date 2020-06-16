@@ -24,3 +24,6 @@ choose_target(Panel panel, Point *point);
 
 bool
 welcome(void);
+
+int
+greetings(void);

@@ -14,5 +14,5 @@ DIRECTION
 get_direction(Panel panel);
 
 void
-guess_next(Point *coord, Panel *panel);
+guess_next(Point *coord, Panel *panel, int trys);
 

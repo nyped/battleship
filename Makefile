@@ -1,6 +1,6 @@
 CC= gcc
 EXE_NAME= a.out
-CFLAGS= -Wall -g 
+CFLAGS= -Wall -g
 
 build: main.o graphic.o core.o populate.o bot.o
 	$(CC) $(CFLAGS) main.o graphic.o core.o populate.o bot.o -lncurses -o $(EXE_NAME)
@@ -24,4 +24,4 @@ test: build
 	./$(EXE_NAME)
 
 clean:
-	rm *.o $(EXE_NAME)
+	rm *.o $(EXE_NAME) || true

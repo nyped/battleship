@@ -19,8 +19,8 @@ rdm(int borne)
 Point
 random_point(void)
 {
-	int x = (int) rdm(11);
-	int y = (int) rdm(11);
+	int x = (int) rdm(10);
+	int y = (int) rdm(10);
 	Point point;
 
 	point.x = x;
@@ -41,7 +41,11 @@ autopopulate(Panel *panel)
 			coord = random_point();
 			if (new_panel.val_grid[coord.x][coord.y] == POPULATING)
 				continue;
-			add_ship(&coord, &new_panel, index);
+			if (!add_ship(&coord, &new_panel, index)) {
+				new_panel = *panel;
+				colorize_grid(*panel);
+				continue;
+			}
 			if (populate_ok(coord, new_panel, index)) {
 				--(new_panel.val_status[index]);
 				*panel = new_panel;
@@ -86,20 +90,27 @@ get_direction(Panel panel)
 }
 
 void
-guess_next(Point *coord, Panel *panel)
+guess_next(Point *coord, Panel *panel, int trys)
 {
 	int *var;
 	DIRECTION direction = (DIRECTION) rdm(2);
 
-	if (get_direction(*panel) == HOR)
-		var = &(coord->y);
-	else
-		var = &(coord->x);
+	if (trys < 10) {
+		if (get_direction(*panel) == HOR)
+			var = &(coord->y);
+		else
+			var = &(coord->x);
+	} else {
+		if (get_direction(*panel) == HOR)
+			var = &(coord->x);
+		else
+			var = &(coord->y);
+	}
 
 	do {
 		if (direction == HOR)
 			++(*var);
-		else 
+		else
 			--(*var);
 	} while ((panel->val_grid[coord->x][coord->y] == TOUCHED) && (*var < 10) && (*var > -1));
 }

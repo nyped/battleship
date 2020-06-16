@@ -105,7 +105,7 @@ populate_ok(Point point, Panel panel, int index) /* index of the ship in status 
 	return(FALSE);
 }
 
-void
+bool
 add_ship(Point *point, Panel *panel, int type)
 {
 	int *var;
@@ -117,10 +117,13 @@ add_ship(Point *point, Panel *panel, int type)
 	temp = *var;
 
 	do {
+		if (panel->val_grid[point->x][point->y] == POPULATING)
+			return(FALSE);
 		panel->val_grid[point->x][point->y] = POPULATING;
 		++(*var);
 	} while ((*var < temp + index_to_len(type)) && (*var < 10) && (*var > -1));
 	*var = temp;
+	return(TRUE);
 }
 
 void
@@ -152,7 +155,11 @@ populate_panel(Panel *panel)
 			choose_target(new_panel, &coord);
 			if (new_panel.val_grid[coord.x][coord.y] == POPULATING)
 				continue;
-			add_ship(&coord, &new_panel, index);
+			if (!add_ship(&coord, &new_panel, index)) {
+				new_panel = *panel;
+				colorize_grid(*panel);
+				continue;
+			}
 			if (populate_ok(coord, new_panel, index)) {
 				--(new_panel.val_status[index]);
 				*panel = new_panel;

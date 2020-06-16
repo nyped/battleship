@@ -2,10 +2,6 @@
 
 A terminal based battleship written in C.
 
-## state
-
-For the moment, we just have a 2 players mode.
-
 ## preriquisites
 
 - C
