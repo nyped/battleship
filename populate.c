@@ -1,14 +1,14 @@
 #include "variables.h"
 #include "graphic.h"
 
-static int
-number_neighbours(Point point, Panel panel)
+int
+number_neighbours(Point point, Panel panel, int tile)
 {
 	int i, j, number = 0;
 	for (i = -1; i <= 1; ++i)
 		for (j = -1; j <= 1; ++j)
 			if ((point.x + i < 10) && (point.x + i > -1) && (point.y + j < 10) && (point.y + j > -1))
-				if (panel.val_grid[point.x + i][point.y + j] == POPULATING)
+				if (panel.val_grid[point.x + i][point.y + j] == tile)
 					++number;
 	return(number);
 }
@@ -33,13 +33,13 @@ min(int x, int y)
 }
 
 static bool
-ship_position_ok(Point point, Panel panel, int direction, int index) /* 0, 1 -> horizontal, vertical */
+ship_position_ok(Point point, Panel panel, DIRECTION direction, int index) /* 0, 1 -> horizontal, vertical */
 {
 	Point coord = point;
 	int *var;
 	int initial_coord;
 
-	if (direction == 0)
+	if (direction == HOR)
 		var = &(coord.y);
 	else
 		var = &(coord.x);
@@ -47,35 +47,35 @@ ship_position_ok(Point point, Panel panel, int direction, int index) /* 0, 1 -> 
 	initial_coord = (*var);
 
 	while ((panel.val_grid[coord.x][coord.y] == POPULATING) && (*var < 10) && (*var > -1)) {
-		if (number_neighbours(coord, panel) > 3)
+		if (number_neighbours(coord, panel, POPULATING) > 3)
 			return(FALSE);
 		++(*var);
 	}
 	--(*var);
-	if (number_neighbours(coord, panel) > min(2, index_to_len(index)))
+	if (number_neighbours(coord, panel, POPULATING) > min(2, index_to_len(index)))
 		return(FALSE);
 
 	*var = initial_coord;
 	while ((panel.val_grid[coord.x][coord.y] == POPULATING) && (*var < 10) && (*var > -1)) {
-		if (number_neighbours(coord, panel) > 3)
+		if (number_neighbours(coord, panel, POPULATING) > 3)
 			return(FALSE);
 		--(*var);
 	}
 	++(*var);
-	if (number_neighbours(coord, panel) > min(2, index_to_len(index)))
+	if (number_neighbours(coord, panel, POPULATING) > min(2, index_to_len(index)))
 		return(FALSE);
 
 	return(TRUE);
 }
 
 static int
-count_len(Point point, Panel panel, int direction) /* 0, 1 -> Horizontal, vertical */
+count_len(Point point, Panel panel, DIRECTION direction) /* 0, 1 -> Horizontal, vertical */
 {
 	Point coord = point;
 	int *var;
 	int sum = 1, initial_coord;
 
-	if (direction == 0)
+	if (direction == HOR)
 		var = &(coord.y);
 	else
 		var = &(coord.x);
@@ -96,7 +96,7 @@ count_len(Point point, Panel panel, int direction) /* 0, 1 -> Horizontal, vertic
 	return(sum);
 }
 
-static bool
+bool
 populate_ok(Point point, Panel panel, int index) /* index of the ship in status */
 {
 	if ((ship_position_ok(point, panel, 0, index)) && (ship_position_ok(point, panel, 1, index))
@@ -105,7 +105,7 @@ populate_ok(Point point, Panel panel, int index) /* index of the ship in status 
 	return(FALSE);
 }
 
-static void
+void
 add_ship(Point *point, Panel *panel, int type)
 {
 	int *var;
@@ -123,7 +123,7 @@ add_ship(Point *point, Panel *panel, int type)
 	*var = temp;
 }
 
-static void
+void
 population_to_real_grid(Panel *panel)
 {
 	int i, j;
@@ -138,7 +138,7 @@ population_to_real_grid(Panel *panel)
 	panel->val_status[4] = 2;
 }
 
-static void
+void
 populate_panel(Panel *panel)
 {
 	int index;
@@ -159,8 +159,8 @@ populate_panel(Panel *panel)
 				colorize_grid(*panel);
 				draw_status(*panel);
 			} else {
-			new_panel = *panel;
-			colorize_grid(*panel);
+				new_panel = *panel;
+				colorize_grid(*panel);
 			}
 		}
 	}

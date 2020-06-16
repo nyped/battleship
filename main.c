@@ -7,7 +7,7 @@ int main(void)
 {
 	set_curses();
 
-	two_player_loop();
+	one_player_loop();
 
 	return 0;
 }

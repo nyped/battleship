@@ -1,9 +1,9 @@
 CC= gcc
 EXE_NAME= a.out
-CFLAGS= -Wall -g
+CFLAGS= -Wall -g 
 
-build: main.o graphic.o core.o populate.o
-	$(CC) $(CFLAGS) main.o graphic.o core.o populate.o -lncurses -o $(EXE_NAME)
+build: main.o graphic.o core.o populate.o bot.o
+	$(CC) $(CFLAGS) main.o graphic.o core.o populate.o bot.o -lncurses -o $(EXE_NAME)
 
 main.o: main.c graphic.c
 	$(CC) $(CFLAGS) -c main.c
@@ -16,6 +16,9 @@ core.o: core.c core.h
 
 populate.o: populate.c populate.h
 	$(CC) $(CFLAGS) -c populate.c
+
+bot.o: bot.c bot.h
+	$(CC) $(CFLAGS) -c bot.c
 
 test: build
 	./$(EXE_NAME)

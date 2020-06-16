@@ -1,6 +1,7 @@
 #include "variables.h"
 #include "graphic.h"
 #include "populate.h"
+#include "bot.h"
 
 static bool
 is_finished_player(Panel panel)
@@ -109,13 +110,13 @@ sink_neighbours(Point point, Panel *panel)
 }
 
 static int
-count_len(Point point, Panel panel, int direction) /* 0, 1 -> Horizontal, vertical */
+count_len(Point point, Panel panel, DIRECTION direction) /* 0, 1 -> Horizontal, vertical */
 {
 	Point coord = point;
 	int *var;
 	int sum = 1, initial_coord;
 
-	if (direction == 0)
+	if (direction == HOR)
 		var = &(coord.y);
 	else
 		var = &(coord.x);
@@ -271,4 +272,75 @@ two_player_loop(void)
 	werase(stdscr);
 	refresh();
 	two_player_loop();
+}
+
+/* bot stuff */
+
+static void
+bot_move(Panel *panel)
+{
+	Point coord = get_coord_touched(*panel);
+
+	if (coord.x == 20) {
+		do {
+			coord = random_point();
+		} while ((panel->val_grid[coord.x][coord.y] > 1) 
+				|| ((number_neighbours(coord, *panel, SUNKED) > 0) && (panel->val_status[1] != 0)));
+	} else {
+		guess_next(&coord, panel);
+	}
+	make_move_panel(coord, panel);
+}
+
+static void
+one_player_populate(Screen *screen)
+{
+	populate_panel(&(screen->left));
+	autopopulate(&(screen->right));
+	/*populate_panel(&(screen->right));*/
+}
+
+void
+one_player_loop(void)
+{
+	if (!has_colors()) {
+		endwin();
+		return;
+	}
+
+	if (!welcome()) {
+		endwin();
+		return;
+	}
+
+	int ch;
+	Screen screen;
+	Point l_cursor = {.x = 4, .y = 4};
+	Point r_cursor = {.x = 4, .y = 4};
+
+	init_screen(&screen);
+	draw_screen(screen);
+	colorize_screen(screen);
+	one_player_populate(&screen);
+	draw_all_status(screen);
+	mvwprintw(stdscr, LINES - 2, (COLS - 20)/ 2, "Touch the enemy's ships");
+
+	while (! is_finished(screen)) {
+		if (current_player(screen) == LEFT_PLAYER) {
+			bot_move(&(screen.left));
+			change_player(&screen);
+		} else {
+			choose_target(screen.right, &r_cursor);
+			make_move(l_cursor, r_cursor, &screen);
+		}
+	}
+
+	reveal(&screen);
+	mvwprintw(stdscr, LINES - 2, (COLS - 20)/ 2, "                         ");
+	mvwprintw(stdscr, LINES - 2, (COLS - 35)/ 2, "What a game ! Hit space to continue");
+	while ((ch = getch()) != ' ')
+		continue;
+	werase(stdscr);
+	refresh();
+	one_player_loop();
 }

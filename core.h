@@ -12,3 +12,6 @@ two_player_loop(void);
 
 void
 set_curses(void);
+
+void
+one_player_loop(void);

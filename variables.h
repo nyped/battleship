@@ -25,3 +25,7 @@ typedef struct Point {
 
 #define LEFT_PLAYER 0
 #define RIGHT_PLAYER 1
+
+#define DIRECTION int
+#define VER 1
+#define HOR 0
