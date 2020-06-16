@@ -84,7 +84,7 @@ colorize_grid(Panel panel)
 			switch (panel.val_grid[i][j]) {
 			case SEA:
 				wattron(panel.grid, COLOR_PAIR(1));
-				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 2, ACS_BULLET);
+				mvwaddch(panel.grid, 2 * i + 1, 4 * j + 2, ACS_DIAMOND);
 				wattroff(panel.grid, COLOR_PAIR(1));
 				continue;
 			case SUNKED:
